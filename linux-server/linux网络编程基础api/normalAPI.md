@@ -63,7 +63,7 @@ int shutdown(int sockfd,int howto);
 
 
 
-## 7	数据读写
+## 7	数据读写（recv recvfrom send sendto）
 
 ### 7.1	TCP数据读写
 
@@ -206,7 +206,7 @@ ssize_t sendto(int sockfd,void* buf,size_t len,int flags,struct sockaddr* dest_a
 
 
 
-## 8 	通用数据读写
+## 8 	通用数据读写（recvmsg和sendmsg）
 
 ```c
 #include <sys/socket.h>
@@ -320,8 +320,6 @@ int recvbuf = 2048;
 setsockopt(sock,SOL_SOCKET,SO_RCVBUF,&sendbuf,sizeof(sendbuf));
 ```
 
-
-
 ### 11.3	SO_RCVLOWAT和SO_SNDLOWAT选项
 
 - #### TCP接收缓冲区和发送缓冲区的低水位标记
@@ -358,3 +356,98 @@ setsockopt(sock,SOL_SOCKET,SO_RCVBUF,&sendbuf,sizeof(sendbuf));
 
 
 ## 12	网络信息API
+
+### 12.1	gethostbyname和gethostbyaddr
+
+- #### 二者不可重入，非线程安全
+
+```c
+#include <netdb.h>
+struct hostent* gethostbyname(const char* name);
+struct hostent* gethostbyaddr(const void* addr,size_t len,int type);
+
+struct hostent{
+    char* h_name;				//主机名
+    char** h_aliases;			//主机别名列表
+    int h_addrtype;				//地址类型（地址族）
+    int h_length;				//地址长度
+    char** h_addr_list;			//网络字节序列出的主机IP地址列表
+};
+```
+
+### 12.2	getservbyname和getservbyport
+
+- #### 二者不可重入，非线程安全
+
+```c
+#include <netdb.h>
+//name 目标服务的名字   proto围殴服务类型  tcp流服务 udp数据包服务
+struct servent* getservbyname(const char* name,const char* proto);
+struct servent* getservbyport(int port,const char* proto);
+struct servent{
+    char* s_name;				//服务名称
+    char** s_aliases;			//服务别名列表
+    int s_port;					//端口号
+    char* s_proto;				//服务类型 通常是tcp或udp
+};
+```
+
+![image-20220624123850801](../image/image-20220624123850801.png)
+
+### 12.3	getaddrinfo
+
+- ##### 函数是否可重入取决于内部调用gethostbyname和getservbyname函数
+
+```c
+#include <netdb.h>
+
+//既能通过主机名获得IP地址(内部使用gethostbyname) 	也能通过服务名获得端口号(内部使用getservbyname)
+
+//hostname可接受主机名也可以是IP地址
+//service可接收服务名也可接收端口号
+//hints可以为NULL，表示允许getaddrinfo反馈任何可用的结果
+//result指向一条链表，用于存储getaddrinfo反馈的结果
+int getaddrinfo(const char* hostname,const char* service,const struct addrinfo* hints,struct addrinfo** result);
+
+struct addrinfo{
+    int ai_flags;					//如下图
+    int ai_family;					//地址族
+    int ai_socktype;				//服务类型 SOCK_STREAM SOCK_DGRAM
+    int ai_protocol;				//如下
+    socklen_t ai_addrlen;			//socket地址ai_addr长度
+    char* ai_canonname;				//主机别名
+    struct sockaddr* ai_addr;		//指向socket地址
+    struct addrinfo* ai_next;		//指向下一个sockinfo结构的对象
+};
+```
+
+![image-20220624130604010](../image/image-20220624130604010.png)
+
+当使用hints参数时，可以设置：ai_flags	ai_family	ai_socktype	ai_protocol四个字段，其他字段必须设置为NULL
+
+![image-20220624130744088](../image/image-20220624130744088.png)
+
+#### 注意：getaddrinfo隐式分配内存给res指针，res指针原本是没有指向一块合法内存，因此使用完后要释放内存
+
+```c
+#include <netdb.h>
+void freeaddrinfo(struct addrinfo* res);
+```
+
+### 12.4	getnameinfo
+
+- ##### 函数是否可重入取决于内部调用gethostbyaddr和getservbyport函数
+
+```c
+#include <netdb.h>
+//通过socket地址同时获得字符串表示的主机名(内部使用gethostbyaddr)和服务名(内部使用getservbyport)
+//主机名存储在host参数
+//服务名存储在serv参数
+//flags控制getnameinfo行为
+//成功0 失败返回错误码如下
+int getnameinfo（const struct sockaddr* sockaddr,socklen_t addrlen,char* host,socklen_t hostlen,char* serv,socklen_t servlen,int flags);
+```
+
+![image-20220624131721628](../image/image-20220624131721628.png)
+
+![image-20220624131752488](../image/image-20220624131752488.png)
