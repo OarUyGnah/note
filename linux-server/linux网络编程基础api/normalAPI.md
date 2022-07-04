@@ -20,6 +20,8 @@ int bind(int sockfd,const struct sockaddr* my_addr,socklen_t addrlen);
 //绑定服务器sockaddr
 ```
 
+#### [1](./bind解析.md)
+
 ## 3	监听socket
 
 ```c
@@ -46,6 +48,8 @@ int accept(int sockfd,struct sockaddr* addr,socklen_t* addrlen);
 //客户端主动连接服务器
 int connect(int sockfd,const struct sockaddr* serv_addr,socklen_t addrlen);
 ```
+
+#### [1](./connect 函数在阻塞和非阻塞模式下的行为.md)
 
 ## 6	关闭连接
 
