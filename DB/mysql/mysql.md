@@ -3128,3 +3128,122 @@ EXPLAIN SELECT * FROM tb_seller WHERE sellerid NOT IN ('alibaba','baidu'); -- �
 EXPLAIN SELECT sellerid,address,PASSWORD FROM tb_seller WHERE sellerid = 'baidu' AND address = '北京市' AND PASSWORD = 'e10adc3949ba59abbe56e057f20f883e';
 ```
 
+
+
+### SQL优化
+
+#### 尽量保持主键有序，加载速度快
+
+```mysql
+CREATE TABLE tb_user(
+  id INT NOT NULL AUTO_INCREMENT,
+  username VARCHAR(45) NOT NULL,
+  PASSWORD VARCHAR(96) NOT NULL,
+  NAME VARCHAR(45) NOT NULL,
+  birthday DATETIME DEFAULT NULL,
+  sex CHAR(1) DEFAULT NULL,
+  email VARCHAR(45) DEFAULT NULL,
+  phone VARCHAR(45) DEFAULT NULL,
+  qq VARCHAR(32) DEFAULT NULL,
+  STATUS VARCHAR(32) NOT NULL COMMENT '用户现状',
+  create_time DATETIME NOT NULL,
+  update_time DATETIME DEFAULT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY unique_user_username(username)
+);
+```
+
+加载文件sql1.log sql2.log中的数据到该表中,sql1.log主键有序，sql2.log主键无序
+
+```mysql
+-- 加载sql1.log sql2.log大文件
+
+-- 1 首先检查全局系统变量 'local_infile'的状态
+SHOW GLOBAL VARIABLES LIKE 'local_infile';
+
+-- 2 如果为OFF则修改为ON
+SET GLOBAL local_infile= 1;
+
+-- 3 加载数据
+-- sql1.log 主键有序
+LOAD DATA LOCAL INFILE 'D:\\sql1.log' INTO TABLE tb_user FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
+-- sql2.log 主键无序	
+LOAD DATA LOCAL INFILE 'D:\\sql2.log' INTO TABLE tb_user FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
+```
+
+#### 关闭唯一性校验
+
+导入数据前执行`SET UNIQUE_CHECKS = 0`关闭唯一性校验，导入结束后执行`SET UNIQUE_CHECKS = 1`恢复唯一性校验，可以提高导入的效率
+
+```mysql
+SHOW VARIABLES LIKE 'UNIQUE_CHECKS';
+SET UNIQUE_CHECKS = 0;
+LOAD DATA LOCAL FILE 'D:\\sql2.log' INTO TABLE tb_user FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
+SET UNIQUE_CHECKS = 1;
+```
+
+#### 优化insert语句
+
+```mysql
+-- 如果需要插入多行，尽量使用多个值表insert语句，效率更高
+insert into tb_test values(...);
+insert into tb_test values(...);
+insert into tb_test values(...);
+-- 优化后
+insert into tb_test values(...),(...),(...);
+
+-- 在事务中进行数据插入
+begin;
+insert into tb_test values(...);
+insert into tb_test values(...);
+insert into tb_test values(...);
+commit;
+
+-- 数据有序插入
+insert into tb_test values(4,'oar1');
+insert into tb_test values(1,'oar2');
+insert into tb_test values(3,'oar3');
+insert into tb_test values(5,'oar4');
+insert into tb_test values(2,'oar5');
+-- 优化后
+insert into tb_test values(1,'oar2');
+insert into tb_test values(2,'oar5');
+insert into tb_test values(3,'oar3');
+insert into tb_test values(4,'oar1');
+insert into tb_test values(5,'oar4');
+```
+
+#### 优化order by语句
+
+![image-20220823163018104](image/image-20220823163018104.png)
+
+![image-20220823163153591](image/image-20220823163153591.png)
+
+![image-20220823163116017](image/image-20220823163116017.png)
+
+![image-20220823163224164](image/image-20220823163224164.png)
+
+#### 优化子查询
+
+有些情况下，子查询可以被更高效的JOIN替代
+
+![image-20220823163451180](image/image-20220823163451180.png)
+
+![image-20220823163504291](image/image-20220823163504291.png)
+
+#### 优化limit查询
+
+```mysql
+-- 1 在索引上完成排序分页操作，最后根据主键关联回原表查询其他内容
+-- 执行耗时   : 0.001 sec
+SELECT * FROM tb_user LIMIT 0,10;	
+-- 执行耗时   : 2.233 sec ，因为前900000条查询记录已被丢弃
+SELECT * FROM tb_user LIMIT 900000,10; 	
+-- 执行耗时   : 1.912 sec
+SELECT * FROM tb_user a,(SELECT id FROM tb_user ORDER BY id LIMIT 900000,10)b WHERE a.id = b.id;
+
+-- 2 适用于主键自增的表，把limit查询转换为某个位置的查询
+-- 执行耗时   : 0.002 sec
+SELECT * FROM tb_user WHERE id > 900000 LIMIT 10;
+```
+

@@ -1,0 +1,139 @@
+#include <memory>
+#include <unistd.h>
+/*
+printf("\033[1;33m Hello World. \033[0m \n");
+颜色如下:
+none         = "\033[0m"
+black        = "\033[0;30m"
+dark_gray    = "\033[1;30m"
+blue         = "\033[0;34m"
+light_blue   = "\033[1;34m"
+green        = "\033[0;32m"
+light_green -= "\033[1;32m"
+cyan         = "\033[0;36m"
+light_cyan   = "\033[1;36m"
+red          = "\033[0;31m"
+light_red    = "\033[1;31m"
+purple       = "\033[0;35m"
+light_purple = "\033[1;35m"
+brown        = "\033[0;33m"
+yellow       = "\033[1;33m"
+light_gray   = "\033[0;37m"
+white        = "\033[1;37m"
+ 
+字背景颜色范围: 40--49                   字颜色: 30--39
+        40: 黑                          30: 黑
+        41:红                          31: 红
+        42:绿                          32: 绿
+        43:黄                          33: 黄
+        44:蓝                          34: 蓝
+        45:紫                          35: 紫
+        46:深绿                        36: 深绿
+        47:白色                        37: 白色
+ 
+  
+ 
+输出特效格式控制：
+ 
+\033[0m  关闭所有属性 
+\033[1m   设置高亮度 
+\03[4m   下划线 
+\033[5m   闪烁 
+\033[7m   反显 
+\033[8m   消隐 
+\033[30m   --   \033[37m   设置前景色 
+\033[40m   --   \033[47m   设置背景色
+ 
+  
+ 
+光标位置等的格式控制：
+ 
+\033[nA  光标上移n行 
+\03[nB   光标下移n行 
+\033[nC   光标右移n行 
+\033[nD   光标左移n行 
+\033[y;xH设置光标位置 
+\033[2J   清屏 
+\033[K   清除从光标到行尾的内容 
+\033[s   保存光标位置 
+\033[u   恢复光标位置 
+\033[?25l   隐藏光标 
+\33[?25h   显示光标
+*/
+class progressbar
+{
+#define TEXT_LENGTH 51
+public:
+    progressbar(char c = '#'){
+        mask = c;
+        reset();
+    }
+    
+    /*~progressbar(){
+        
+    }*/
+    
+    void show(const char *head, const char *tail, int max, int current){
+        if(current > max){
+            current = max;
+        }
+        if(head == nullptr){
+            head = "";
+        }
+        if(tail == nullptr){
+            tail = "";
+        }
+        float percentage = (((float)current / (float)max) * 100.0f);
+        int currentPosition = percentage / 2;
+        memset(progress, mask, currentPosition);
+        /*
+            \033[?25l     隐藏光标
+            \033[33m      颜色
+            \033[1m       设置高亮度 
+            \033[0m       关闭所有属性 
+            \r            将当前位置移到本行开头,也可根据当前字符个数使用同样个\b回退
+        */
+        printf("\033[?25l""\033[33m""\033[1m""%s[%-s] %.1f%% %s""\r", 
+            head, progress, percentage, tail);
+        if(currentPosition == 50)
+           end();
+        fflush(stdout);
+    }
+    
+    void end(){
+        printf("\033[0m\n");
+    }
+    
+    void setMask(const char mask){
+        this->mask = mask;
+    }
+
+    const char getMask() const{
+        return mask;
+    }
+
+    void reset(){
+        memset(progress, 32, TEXT_LENGTH - 1);
+        progress[TEXT_LENGTH - 1] = '\0';
+    }
+private:
+    char progress[TEXT_LENGTH];
+    int max;
+    char mask;
+};
+
+int main(int argc,char*argv[]){
+    //progressbar pgbar('*');
+    progressbar pgbar;
+    const int max = 200;
+    for (int i = 0; i < max; i++ ) {
+        pgbar.show("download:", "1.2M/S", max, i + 1);
+        usleep(10 * 1000);
+    }
+    /*for (int i = 0; i < max; i++ ) {
+        printf("213");
+    }*/
+
+    
+    return 0;
+}

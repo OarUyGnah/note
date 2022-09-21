@@ -101,3 +101,6 @@ cin.tie(old); //恢复为cout
 
 
 ## string流
+
+![image-20220823115756442](image/image-20220823115756442.png)
+

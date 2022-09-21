@@ -25,20 +25,23 @@
   }
   ```
   
+
 **linux提供4个函数来完成二者的转换**
-  
+
 ```c
   unsigned long int htonl(unsigned long int hostlong);//host to network long
   unsigned long int htons(unsigned long int hostshort);
   unsigned long int ntohl(unsigned long int netlong);
   unsigned long int ntohs(unsigned short int netshort);
-  ```
-  
+```
+
 
 
 ## 2	通用socket地址
 
 - ## sockaddr
+
+- 程序员不应操作sockaddr，sockaddr是给操作系统用的
 
   ```c
   #include<bits/socket.h>

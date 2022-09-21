@@ -53,14 +53,14 @@ retval: 用户定义的指针，用来存储被等待线程的返回值
 
     - 把线程属性设置为分离，线程结束后，由系统回收资源
 
-    - 调用pthread_detach分离线程
+    - 调用pthread_detach分离线程，该函数不会阻塞父线程
 
       ```c
       //可以在主线程调用pthread_detach()
       int pthread_detach(pthread_t t);
       //也可以在子线程种调用
       {
-      pthread_detach(pthread_self());
+      	pthread_detach(pthread_self());
       }
       ```
 
@@ -333,3 +333,22 @@ void* threadfunc(void* arg){
   - 条件触发+互斥锁加锁(原子操作)
 
   **在pthread_cond_wait时执行pthread_cancel后，要在线程清理函数中先解锁与条件变量绑定的锁，保证pthread_cond_wait可以返回到调用线程**
+
+## pthread_atfork
+
+```c
+#include <pthread.h>
+// pthread_atfork()在fork()之前调用，当调用fork时，内部创建子进程前在父进程中会调用prepare，内部创建子进程成功后，父进程会调用parent ，子进程会调用child。
+int pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void));
+```
+
+
+
+## pthread_once
+
+```c
+// 本函数使用初值为PTHREAD_ONCE_INIT的once_control变量保证init_routine()函数在本进程执行序列中仅执行一次。
+int pthread_once(pthread_once_t *once_control, void (*init_routine) (void));
+
+```
+
