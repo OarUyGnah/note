@@ -12,19 +12,14 @@ muduo 框架：	base()
 
 算法：代码随想录
 
-开题
+**开题**
 
-论文
-
-- [x] 六级	9.12 9:00打印
+**论文**
 
 
 ### 正常
 
 http权威指南
-
-- [x] c++ primer
-
 
 cmake
 
@@ -53,6 +48,8 @@ boost
 docker
 
 redis
+
+bazel
 
 
 

@@ -73,20 +73,20 @@
 
   ```c
   struct sockaddr_in{
-  	sa_family_t sin_family;		//地址族:AF_INET
-  	u_int16_t sin_port;			//端口号	网络字节序
-  	struct in_addr sin_addr;	//IPV4地址
+  	sa_family_t sin_family;		// 地址族:AF_INET
+  	u_int16_t sin_port;			// 端口号	网络字节序
+  	struct in_addr sin_addr;	// IPV4地址
   };
   struct in_addr{
    	u_int32_t s_addr;  
   };
   
   struct sockaddr_in6{
-      sa_family_t sin_family;		//地址族:AF_INET6
-      u_int16_t sin6_port;		//端口号	网络字节序
-      u_int32_t sin6_flowinfo;	//流信息	应设置为0
-      struct in6_addr sin6_addr;	//IPV6地址结构体
-      u_int32_t sin6_scope_id;	//scope ID
+      sa_family_t sin_family;		// 地址族:AF_INET6
+      u_int16_t sin6_port;		// 端口号	网络字节序
+      u_int32_t sin6_flowinfo;	// 流信息	应设置为0
+      struct in6_addr sin6_addr;	// IPV6地址结构体
+      u_int32_t sin6_scope_id;	// scope ID
   };
   struct in6_addr{
       unsigned char sa_addr[16];
@@ -99,13 +99,13 @@
 
 ```c
 #include <arpa/inet.h>
-//将用点分十进制字符串表示的IPV4地址转换为用网络字节序整数表示的IPV4地址
-//失败返回INADDR_NONE
+// 将用点分十进制字符串表示的IPV4地址转换为用网络字节序整数表示的IPV4地址
+// 失败返回INADDR_NONE
 in_addr_t inet_addr(const char* strptr);
-//功能同inet_addr,但将结果存储于参数inp的地址
-//成功1 失败0
+// 功能同inet_addr,但将结果存储于参数inp的地址
+// 成功1 失败0
 int inet_aton(const char* cp,struct in_addr* inp);
-//将网络字节序整数表示的IPV4地址转换为字符串，但char*返回的是固定内存地址，因此不可重入
+// 将网络字节序整数表示的IPV4地址转换为字符串，但char*返回的是固定内存地址，因此不可重入
 char* inet_ntoa(struct in_addr in);
 ```
 
