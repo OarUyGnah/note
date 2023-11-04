@@ -1,0 +1,1 @@
+[剖析std::function接口与实现 - Jerry_SJTU - 博客园 (cnblogs.com)](https://www.cnblogs.com/jerry-fuyi/p/std_function_interface_implementation.html#mark_1)
